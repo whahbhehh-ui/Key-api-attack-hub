@@ -1,406 +1,747 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>มายคราฟ ระบบสร้างและจัดการคีย์</title>
-    <!-- ดึงฟอนต์พิกเซลภาษาไทย/อังกฤษที่รองรับ -->
-    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Prompt:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<title>tee/dev/attackhub</title>
+<style>
+  @font-face {
+    font-family: 'Minecraft';
+    src: local('Minecraftia'), local('Press Start 2P');
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%;
+    background:#000;
+    overflow:hidden;
+    position:relative;
+    font-family:sans-serif;
+  }
+  canvas {
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    display:block;
+  }
+  #sky { z-index:1; }
+  #clouds { z-index:2; }
+  #snow { z-index:3; }
+  #catFlash {
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    z-index:5;
+    opacity:0;
+    pointer-events:none;
+    background:#000;
+  }
 
-        body {
-            background-color: #111115;
-            background-image: 
-                radial-gradient(#222 15%, transparent 16%),
-                radial-gradient(#1a1a1a 15%, transparent 16%);
-            background-size: 24px 24px;
-            background-position: 0 0, 12px 12px;
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow-x: hidden;
-            position: relative;
-            padding: 30px 10px;
-            font-family: 'Prompt', sans-serif;
-        }
+  /* ---------- GATE (หน้าด่านกรอกรหัสผ่าน) ---------- */
+  #gate {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:#000;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  #gate.hidden {
+    display:none;
+  }
+  .gate-box {
+    width:100%;
+    max-width:340px;
+    background:#0d0d0d;
+    border:1px solid #2a2a2a;
+    border-radius:10px;
+    padding:28px 24px;
+    box-shadow:0 0 30px rgba(120,180,255,0.15);
+  }
+  .gate-box h2 {
+    color:#fff;
+    font-family:'Press Start 2P','Minecraft',monospace;
+    font-size:14px;
+    text-align:center;
+    margin-bottom:22px;
+    letter-spacing:1px;
+  }
+  .gate-box label {
+    display:block;
+    color:#bbb;
+    font-size:13px;
+    margin-bottom:6px;
+  }
+  .gate-box input[type="password"] {
+    width:100%;
+    padding:10px 12px;
+    margin-bottom:18px;
+    background:#1a1a1a;
+    border:1px solid #333;
+    border-radius:6px;
+    color:#fff;
+    font-size:14px;
+    outline:none;
+  }
+  .gate-box input[type="password"]:focus {
+    border-color:#6fa8ff;
+  }
+  #gateSubmit {
+    width:100%;
+    padding:11px;
+    background:#3a6fd8;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  #gateSubmit:hover {
+    background:#5586e8;
+  }
+  #gateError {
+    color:#ff6b6b;
+    font-size:12px;
+    text-align:center;
+    margin-top:12px;
+    min-height:16px;
+  }
 
-        /* ฟอนต์สไตล์พิกเซลสำหรับหัวข้อและปุ่ม */
-        .pixel-font {
-            font-family: 'Silkscreen', cursive, sans-serif;
-        }
+  /* ---------- KEY SYSTEM DASHBOARD (หน้าจัดการคีย์หลังล็อกอิน) ---------- */
+  #dashboard {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #dashboard.hidden {
+    display: none;
+  }
+  .dash-container {
+    width: 100%;
+    max-width: 850px;
+    height: 85vh;
+    background: #0d0d0d;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 40px rgba(0,0,0,0.9);
+    overflow: hidden;
+  }
+  .dash-header {
+    padding: 20px 24px;
+    background: #141414;
+    border-bottom: 1px solid #222;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dash-header h2 {
+    color: #fff;
+    font-size: 16px;
+    font-family:'Press Start 2P','Minecraft',monospace;
+    letter-spacing: 1px;
+  }
+  .control-panel {
+    padding: 20px 24px;
+    background: #111;
+    border-bottom: 1px solid #222;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .control-panel select, .control-panel button {
+    padding: 10px 14px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+  .control-panel select:focus {
+    border-color: #6fa8ff;
+  }
+  .btn-create {
+    background: #238636 !important;
+    border-color: #2ea043 !important;
+    font-weight: bold;
+  }
+  .btn-create:hover {
+    background: #2ea043 !important;
+  }
+  .table-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px 24px 24px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    text-align: left;
+  }
+  th, td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #222;
+    font-size: 13px;
+    color: #ccc;
+  }
+  th {
+    color: #888;
+    font-weight: 600;
+    background: #0d0d0d;
+    position: sticky;
+    top: 0;
+  }
+  .badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  .badge.unused { background: rgba(56, 139, 253, 0.15); color: #58a6ff; border: 1px solid rgba(56, 139, 253, 0.4); }
+  .badge.used { background: rgba(238, 111, 46, 0.15); color: #f0883e; border: 1px solid rgba(238, 111, 46, 0.4); }
+  .badge.expired { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
 
-        /* เอฟเฟกต์หิมะตก */
-        .snowflake {
-            position: absolute;
-            top: -10px;
-            background: #ffffff;
-            width: 6px;
-            height: 6px;
-            opacity: 0.8;
-            pointer-events: none;
-            animation: fall linear infinite;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(-10px) translateX(0); }
-            100% { transform: translateY(105vh) translateX(15px); }
-        }
-
-        /* กล่องทอช (Torch) จำลองแสงไฟมายคราฟมุมซ้ายและขวา */
-        .torch {
-            position: fixed;
-            top: 20px;
-            width: 30px;
-            height: 60px;
-            background: linear-gradient(to bottom, #5c3a21, #3b2514);
-            border: 3px solid #1a1a1a;
-            z-index: 20;
-        }
-        .torch.left { left: 40px; }
-        .torch.right { right: 40px; }
-
-        .torch-fire {
-            position: absolute;
-            top: -20px;
-            left: -5px;
-            width: 32px;
-            height: 32px;
-            background: #ffa500;
-            box-shadow: 0 0 15px #ff4500, 0 0 30px #ff0000;
-            border-radius: 50% 50% 20% 20%;
-            animation: flicker 0.15s infinite alternate;
-        }
-
-        @keyframes flicker {
-            0% { transform: scale(1); opacity: 0.9; background: #ffaa00; }
-            100% { transform: scale(1.1); opacity: 1; background: #ff5500; }
-        }
-
-        /* กล่อง UI หลักสไตล์มายคราฟ */
-        .minecraft-box {
-            background: #2c2c2c;
-            border: 4px solid #1e1e1e;
-            box-shadow: inset -4px -4px 0px #1a1a1a, inset 4px 4px 0px #4d4d4d, 0 10px 25px rgba(0,0,0,0.8);
-            padding: 25px;
-            width: 90%;
-            max-width: 580px;
-            text-align: center;
-            z-index: 10;
-        }
-
-        h1 {
-            font-size: 16px;
-            color: #55ff55;
-            text-shadow: 3px 3px #000000;
-            margin-bottom: 20px;
-        }
-
-        .label-text {
-            font-size: 13px;
-            color: #dddddd;
-            text-align: left;
-            margin-bottom: 6px;
-            display: block;
-            font-weight: bold;
-        }
-
-        .minecraft-select {
-            width: 100%;
-            background: #1e1e1e;
-            border: 3px solid #000000;
-            box-shadow: inset 2px 2px 0px #0a0a0a;
-            color: #ffff55;
-            padding: 12px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            outline: none;
-            cursor: pointer;
-            font-family: 'Prompt', sans-serif;
-        }
-
-        .key-display {
-            background: #1e1e1e;
-            border: 3px solid #000000;
-            box-shadow: inset 2px 2px 0px #0a0a0a;
-            padding: 15px;
-            font-size: 12px;
-            color: #ffff55;
-            margin-bottom: 15px;
-            word-break: break-all;
-            min-height: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .minecraft-btn {
-            background: #727272;
-            border: 4px solid #3d3d3d;
-            box-shadow: inset -4px -4px 0px #222222, inset 4px 4px 0px #a8a8a8;
-            color: #ffffff;
-            padding: 12px;
-            font-size: 12px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 8px;
-            text-shadow: 2px 2px #000000;
-            transition: 0.05s;
-        }
-
-        .minecraft-btn:hover {
-            background: #7fad39;
-            border-color: #4b6b1d;
-            box-shadow: inset -4px -4px 0px #2f4412, inset 4px 4px 0px #a4c95a;
-        }
-
-        .minecraft-btn:active {
-            box-shadow: inset 4px 4px 0px #2f4412;
-            transform: translateY(2px);
-        }
-
-        .status-msg {
-            font-size: 11px;
-            margin-top: 12px;
-            color: #ff5555;
-            min-height: 20px;
-        }
-
-        /* ส่วนแสดงประวัติคีย์ที่เคยสร้าง */
-        .history-section {
-            margin-top: 25px;
-            border-top: 3px dashed #444;
-            padding-top: 15px;
-            text-align: left;
-        }
-
-        .history-title {
-            font-size: 12px;
-            color: #ffaa00;
-            margin-bottom: 10px;
-        }
-
-        .history-list {
-            max-height: 180px;
-            overflow-y: auto;
-            background: #18181c;
-            border: 2px solid #000;
-            padding: 8px;
-        }
-
-        .history-item {
-            background: #25252b;
-            border: 1px solid #3d3d3d;
-            padding: 8px;
-            margin-bottom: 6px;
-            font-size: 11px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .history-item span {
-            color: #aaa;
-            font-size: 10px;
-        }
-
-        .history-actions {
-            display: flex;
-            gap: 5px;
-            margin-top: 4px;
-        }
-
-        .small-btn {
-            background: #555;
-            border: 2px solid #222;
-            color: #fff;
-            font-size: 9px;
-            padding: 4px 8px;
-            cursor: pointer;
-        }
-        .small-btn.reset { background: #b85b14; }
-        .small-btn.delete { background: #b82b2b; }
-        .small-btn:hover { opacity: 0.8; }
-    </style>
+  .action-btns {
+    display: flex;
+    gap: 6px;
+  }
+  .btn-action {
+    padding: 5px 9px;
+    border-radius: 4px;
+    border: 1px solid #333;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .btn-action:hover { background: #333; }
+  .btn-delete:hover { background: #da3633; border-color: #f85149; }
+  .empty-state {
+    text-align: center;
+    color: #666;
+    padding: 40px;
+    font-size: 13px;
+  }
+</style>
 </head>
 <body>
 
-    <!-- ทอชปักซ้ายขวา -->
-    <div class="torch left"><div class="torch-fire"></div></div>
-    <div class="torch right"><div class="torch-fire"></div></div>
+<!-- หน้ากรอกรหัสผ่านเข้าเว็บ -->
+<div id="gate">
+  <div class="gate-box">
+    <label for="gatePassword">รหัสผ่าน</label>
+    <input type="password" id="gatePassword" placeholder="กรอกรหัสผ่าน" autocomplete="off">
+    <button type="button" id="gateSubmit">เข้าสู่ระบบ</button>
+    <div id="gateError"></div>
+  </div>
+</div>
 
-    <div class="minecraft-box">
-        <h1 class="pixel-font">MINECRAFT KEY SYSTEM</h1>
-        
-        <label class="label-text">เลือกแพ็กเกจระยะเวลา:</label>
-        <select id="packageSelect" class="minecraft-select">
-            <option value="1">แพ็กเกจ 1 วัน</option>
-            <option value="5">แพ็กเกจ 5 วัน</option>
-            <option value="7">แพ็กเกจ 7 วัน</option>
-            <option value="30">แพ็กเกจ 30 วัน</option>
-            <option value="lifetime">แพ็กเกจถาวร (Lifetime)</option>
-        </select>
-
-        <div class="key-display" id="keyOutput">
-            กดปุ่มสร้างคีย์ด้านล่างเพื่อเริ่มใช้งาน
-        </div>
-
-        <button class="minecraft-btn pixel-font" onclick="generateKey()">สร้างคีย์ใหม่ (GENERATE)</button>
-        <button class="minecraft-btn pixel-font" onclick="copyKey()" style="background: #3c8527;">คัดลอกคีย์ล่าสุด (COPY)</button>
-        
-        <div class="status-msg" id="statusMsg"></div>
-
-        <!-- รายการประวัติคีย์ที่สร้างไว้ -->
-        <div class="history-section">
-            <div class="history-title pixel-font">📜 ประวัติคีย์ที่คุณเคยสร้างในเครื่องนี้:</div>
-            <div class="history-list" id="historyList">
-                <!-- ข้อมูลจะแสดงตรงนี้ผ่าน JavaScript -->
-            </div>
-        </div>
+<!-- หน้าแดชบอร์ดจัดการคีย์ -->
+<div id="dashboard" class="hidden">
+  <div class="dash-container">
+    <div class="dash-header">
+      <h2>ATTACK HUB - KEY MANAGER</h2>
+      <button class="btn-action" onclick="logoutDashboard()">ออกจากระบบ</button>
     </div>
+    <div class="control-panel">
+      <label style="color:#aaa; font-size:13px;">อายุคีย์:</label>
+      <select id="keyDuration">
+        <option value="1">1 วัน</option>
+        <option value="5">5 วัน</option>
+        <option value="7">7 วัน</option>
+        <option value="30">30 วัน</option>
+        <option value="permanent">ถาวร (Permanent)</option>
+      </select>
+      <button class="btn-action btn-create" onclick="createKey()">+ สร้างคีย์ใหม่</button>
+    </div>
+    <div class="table-container">
+      <table id="keyTable">
+        <thead>
+          <tr>
+            <th>คีย์ (Key)</th>
+            <th>อายุคีย์</th>
+            <th>สถานะ</th>
+            <th>HWID (รหัสเครื่อง)</th>
+            <th>วันหมดอายุ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="keyTableBody">
+          <!-- รายการคีย์จะถูกแสดงที่นี่ -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // สร้างหิมะตก
-        function createSnowflakes() {
-            const snowCount = 25;
-            for (let i = 0; i < snowCount; i++) {
-                const snow = document.createElement('div');
-                snow.classList.add('snowflake');
-                snow.style.left = Math.random() * window.innerWidth + 'px';
-                snow.style.top = (Math.random() * -50) + 'px';
-                snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                snow.style.animationDelay = (Math.random() * 5) + 's';
-                document.body.appendChild(snow);
-            }
-        }
-        createSnowflakes();
+<canvas id="sky"></canvas>
+<canvas id="clouds"></canvas>
+<canvas id="snow"></canvas>
+<img id="catFlash" src="data:image/jpeg;base64,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" alt="">
 
-        // โหลดประวัติจาก localStorage
-        let keyHistory = JSON.parse(localStorage.getItem('mc_key_history')) || [];
+<script>
+/* ---------- CANVAS SETUP ---------- */
+const skyCanvas = document.getElementById('sky');
+const cloudCanvas = document.getElementById('clouds');
+const snowCanvas = document.getElementById('snow');
+const catFlash = document.getElementById('catFlash');
+const skyCtx = skyCanvas.getContext('2d');
+const cloudCtx = cloudCanvas.getContext('2d');
+const snowCtx = snowCanvas.getContext('2d');
 
-        function saveHistory() {
-            localStorage.setItem('mc_key_history', JSON.stringify(keyHistory));
-            renderHistory();
-        }
+function resize() {
+  skyCanvas.width = window.innerWidth;
+  skyCanvas.height = window.innerHeight;
+  cloudCanvas.width = window.innerWidth;
+  cloudCanvas.height = window.innerHeight;
+  snowCanvas.width = window.innerWidth;
+  snowCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
 
-        // ฟังก์ชันสร้างคีย์
-        function generateKey() {
-            const selectElement = document.getElementById("packageSelect");
-            const packageDays = selectElement.value;
-            const packageText = selectElement.options[selectElement.selectedIndex].text;
+/* ---------- STARS ---------- */
+let stars = [];
+function initStars() {
+  stars = [];
+  const count = Math.floor((skyCanvas.width * skyCanvas.height) / 4000);
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * skyCanvas.width,
+      y: Math.random() * skyCanvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.02 + Math.random() * 0.03
+    });
+  }
+}
+initStars();
+window.addEventListener('resize', initStars);
 
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let randomCode = "";
-            for (let i = 0; i < 16; i++) {
-                if (i > 0 && i % 4 === 0) randomCode += "-";
-                randomCode += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
+function drawStars() {
+  for (const s of stars) {
+    s.phase += s.speed;
+    const alpha = 0.5 + 0.5 * Math.sin(s.phase);
+    skyCtx.beginPath();
+    skyCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    skyCtx.fillStyle = `rgba(255,255,255,${alpha})`;
+    skyCtx.fill();
+  }
+}
 
-            const fullKey = `MC-${randomCode}`;
-            
-            // คำนวณวันหมดอายุ
-            let expireDate = "ใช้งานได้ตลอดชีพ";
-            let now = new Date().getTime();
-            if (packageDays !== "lifetime") {
-                let days = parseInt(packageDays);
-                let expTime = now + (days * 24 * 60 * 60 * 1000);
-                expireDate = new Date(expTime).toLocaleString();
-            }
+/* ---------- LIGHTNING ---------- */
+let flashAlpha = 0;
+let activeBolt = null; 
 
-            // บันทึกลงระบบจำคีย์ (จำลอง HWID ล็อกเครื่องแรกที่กดใช้)
-            const newKeyData = {
-                key: fullKey,
-                package: packageText,
-                expire: expireDate,
-                expireTimestamp: packageDays === "lifetime" ? null : now + (parseInt(packageDays) * 86400000),
-                hwid: "HWID-USER-" + Math.floor(Math.random() * 89999 + 10000), // ล็อกรหัสเครื่องจำลอง
-                status: "ปกติ (ยังไม่ถูกใช้งาน)"
-            };
+function randRange(a, b) { return a + Math.random() * (b - a); }
 
-            keyHistory.unshift(newKeyData); // เพิ่มไว้บนสุด
-            saveHistory();
+function generateBoltPoints(x, y) {
+  const points = [{ x, y }];
+  let curX = x, curY = y;
+  const segments = 8 + Math.floor(Math.random() * 5);
+  for (let i = 0; i < segments; i++) {
+    curX += randRange(-40, 40);
+    curY += (skyCanvas.height - y) / segments;
+    points.push({ x: curX, y: curY });
+  }
+  return points;
+}
 
-            document.getElementById("keyOutput").innerText = `${fullKey} [${packageText}]`;
-            document.getElementById("statusMsg").innerText = "สำเร็จ! สร้างคีย์และบันทึกข้อมูลเรียบร้อย";
-            document.getElementById("statusMsg").style.color = "#55ff55";
-        }
+function drawBolt(points) {
+  skyCtx.strokeStyle = 'rgba(220,235,255,0.95)';
+  skyCtx.lineWidth = 2 + Math.random() * 2;
+  skyCtx.shadowColor = 'rgba(150,200,255,0.9)';
+  skyCtx.shadowBlur = 15;
+  skyCtx.beginPath();
+  skyCtx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    skyCtx.lineTo(points[i].x, points[i].y);
+  }
+  skyCtx.stroke();
 
-        // แสดงประวัติคีย์ทั้งหมด
-        function renderHistory() {
-            const listEl = document.getElementById("historyList");
-            listEl.innerHTML = "";
+  if (points.length > 3) {
+    const idx = Math.floor(points.length / 3);
+    skyCtx.beginPath();
+    let bx = points[idx].x + randRange(-20, 20);
+    let by = points[idx].y;
+    skyCtx.moveTo(bx, by);
+    for (let i = 0; i < 4; i++) {
+      bx += randRange(-30, 30);
+      by += 25;
+      skyCtx.lineTo(bx, by);
+    }
+    skyCtx.stroke();
+  }
+  skyCtx.shadowBlur = 0;
+}
 
-            if (keyHistory.length === 0) {
-                listEl.innerHTML = "<div style='color:#777; font-size:10px; text-align:center; padding:10px;'>ยังไม่มีประวัติการสร้างคีย์</div>";
-                return;
-            }
+function triggerLightning() {
+  let originX = skyCanvas.width / 2;
+  let originY = 20;
+  if (clouds.length) {
+    const c = clouds[Math.floor(Math.random() * clouds.length)];
+    originX = c.x + 40 * c.scale;
+    originY = c.y + 25 * c.scale;
+  }
+  const points = generateBoltPoints(originX, originY);
+  activeBolt = { points: points, life: 6 };
+  flashAlpha = 0.5;
+  strikeGround(points[points.length - 1].x);
+}
+setInterval(triggerLightning, 60 * 1000);
 
-            let currentTime = new Date().getTime();
+function drawLightning() {
+  if (flashAlpha > 0) {
+    skyCtx.fillStyle = `rgba(180,200,255,${flashAlpha})`;
+    skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+    flashAlpha -= 0.03;
+  }
+  catFlash.style.opacity = Math.max(0, Math.min(1, flashAlpha * 2.2));
 
-            keyHistory.forEach((item, index) => {
-                // เช็ควันหมดอายุ
-                let statusText = item.status;
-                let statusColor = "#55ff55";
+  if (activeBolt && activeBolt.life > 0) {
+    drawBolt(activeBolt.points);
+    activeBolt.life--;
+  } else {
+    activeBolt = null;
+  }
+}
 
-                if (item.expireTimestamp && currentTime > item.expireTimestamp) {
-                    statusText = "❌ หมดอายุแล้ว (Expired)";
-                    statusColor = "#ff5555";
-                }
+/* ---------- CLOUDS ---------- */
+let clouds = [];
+function initClouds() {
+  clouds = [];
+  const edgeR = 26;
+  const numClouds = Math.max(3, Math.round(cloudCanvas.width / 260));
+  const segment = cloudCanvas.width / numClouds;
 
-                const div = document.createElement("div");
-                div.classList.add("history-item");
-                div.innerHTML = `
-                    <b style="color: #ffff55;">${item.key}</b>
-                    <span>แพ็กเกจ: ${item.package} | หมดอายุ: ${item.expire}</span>
-                    <span>รหัสเครื่อง (HWID): <b style="color:#00ffff;">${item.hwid}</b></span>
-                    <span style="color: ${statusColor}; font-weight:bold;">สถานะ: ${statusText}</span>
-                    <div class="history-actions">
-                        <button class="small-btn reset" onclick="resetHwid(${index})">รีเซ็ตรหัสเครื่อง</button>
-                        <button class="small-btn delete" onclick="deleteKey(${index})">ลบคีย์</button>
-                    </div>
-                `;
-                listEl.appendChild(div);
-            });
-        }
+  for (let i = 0; i < numClouds; i++) {
+    const scale = randRange(2.1, 2.6);
+    const segStart = i * segment;
+    const stretch = Math.max(1, (segment - edgeR * 2 * scale) / (55 * scale)) * 2.3;
+    clouds.push({
+      x: segStart - edgeR * scale * 0.6,
+      y: 12,
+      scale: scale,
+      stretch: stretch,
+      speed: 0,
+      alpha: 1
+    });
+  }
+}
+initClouds();
+window.addEventListener('resize', initClouds);
 
-        // รีเซ็ตรหัสเครื่อง (HWID)
-        function resetHwid(index) {
-            keyHistory[index].hwid = "ยังไม่มีการผูกรหัสเครื่อง (รีเซ็ตแล้ว)";
-            keyHistory[index].status = "ปกติ (รีเซ็ต HWID แล้ว)";
-            saveHistory();
-            alert("รีเซ็ตรหัสเครื่อง (HWID) ของคีย์นี้สำเร็จแล้ว!");
-        }
+function drawCloudShape(x, y, scale, alpha, stretch = 1) {
+  cloudCtx.save();
+  cloudCtx.globalAlpha = alpha;
+  cloudCtx.fillStyle = '#ffffff';
 
-        // ลบคีย์
-        function deleteKey(index) {
-            if(confirm("ต้องการลบคีย์นี้ออกจากประวัติใช่หรือไม่?")) {
-                keyHistory.splice(index, 1);
-                saveHistory();
-            }
-        }
+  const totalWidth = 55 * stretch;
+  const puffRadius = 26;
+  const maxGap = puffRadius * 0.9;
+  const numPuffs = Math.max(5, Math.ceil(totalWidth / maxGap) + 1);
 
-        // ฟังก์ชันคัดลอกคีย์ล่าสุด
-        function copyKey() {
-            if (keyHistory.length === 0) {
-                document.getElementById("statusMsg").innerText = "ผิดพลาด: ยังไม่มีคีย์ให้คัดลอก!";
-                document.getElementById("statusMsg").style.color = "#ff5555";
-                return;
-            }
-            const latestKey = `${keyHistory[0].key} [${keyHistory[0].package}]`;
-            navigator.clipboard.writeText(latestKey);
-            document.getElementById("statusMsg").innerText = "คัดลอกคีย์ล่าสุดเรียบร้อย!";
-            document.getElementById("statusMsg").style.color = "#ffff55";
-        }
+  const puffs = [];
+  for (let i = 0; i < numPuffs; i++) {
+    const dx = (totalWidth / (numPuffs - 1)) * i;
+    const wave = Math.sin((i / (numPuffs - 1)) * Math.PI * 2.2) * 10;
+    const r = puffRadius * randRangeStable(i, 0.85, 1.05);
+    puffs.push([dx, wave, r]);
+  }
 
-        // โหลดข้อมูลประวัติครั้งแรกตอนเปิดเว็บ
-        renderHistory();
-    </script>
+  for (const [dx, dy, r] of puffs) {
+    cloudCtx.beginPath();
+    cloudCtx.arc(x + dx * scale, y + dy * scale, r * scale, 0, Math.PI * 2);
+    cloudCtx.fill();
+  }
+  cloudCtx.restore();
+}
+
+function randRangeStable(seed, a, b) {
+  const x = Math.sin(seed * 999) * 10000;
+  return a + (x - Math.floor(x)) * (b - a);
+}
+
+function drawClouds() {
+  cloudCtx.clearRect(0, 0, cloudCanvas.width, cloudCanvas.height);
+  for (const c of clouds) {
+    drawCloudShape(c.x, c.y, c.scale, c.alpha, c.stretch || 1);
+  }
+}
+
+/* ---------- SNOW ---------- */
+let flakes = [];
+function initSnow() {
+  flakes = [];
+  const count = Math.floor((snowCanvas.width * snowCanvas.height) / 6000);
+  for (let i = 0; i < count; i++) {
+    flakes.push({
+      x: Math.random() * snowCanvas.width,
+      y: Math.random() * snowCanvas.height,
+      r: Math.random() * 3 + 1,
+      speedY: Math.random() * 1 + 0.5,
+      speedX: Math.random() * 0.6 - 0.3,
+      sway: Math.random() * Math.PI * 2
+    });
+  }
+}
+initSnow();
+window.addEventListener('resize', initSnow);
+
+let mounds = [];
+function initMounds() {
+  const count = 6 + Math.floor(snowCanvas.width / 220);
+  mounds = [];
+  for (let i = 0; i < count; i++) {
+    mounds.push({
+      x: (snowCanvas.width / count) * i + randRange(-30, 30),
+      width: randRange(70, 200),
+      height: 0,
+      maxHeight: randRange(20, 100)
+    });
+  }
+}
+initMounds();
+window.addEventListener('resize', initMounds);
+
+function addToPile(x) {
+  let closest = mounds[0];
+  let minDist = Infinity;
+  for (const m of mounds) {
+    const d = Math.abs(m.x - x);
+    if (d < minDist) { minDist = d; closest = m; }
+  }
+  if (minDist < closest.width) {
+    closest.height = Math.min(closest.maxHeight, closest.height + randRange(0.2, 0.5));
+  }
+}
+
+function heightAt(x) {
+  let h = 0;
+  for (const m of mounds) {
+    const d = Math.abs(x - m.x);
+    if (d < m.width) {
+      const t = 1 - d / m.width;
+      h = Math.max(h, m.height * Math.sin(t * Math.PI / 2));
+    }
+  }
+  for (const spot of meltSpots) {
+    const d = Math.abs(x - spot.x);
+    if (d < spot.radius) {
+      h = Math.max(0, h - spot.strength * (1 - d / spot.radius));
+    }
+  }
+  return h;
+}
+
+let meltSpots = [];
+function strikeGround(x) {
+  meltSpots.push({ x: x, radius: 45, strength: 200 });
+  if (meltSpots.length > 20) meltSpots.shift();
+}
+
+function drawPile() {
+  const step = 6;
+  snowCtx.fillStyle = 'rgba(255,255,255,0.95)';
+  snowCtx.beginPath();
+  snowCtx.moveTo(0, snowCanvas.height);
+  snowCtx.lineTo(0, snowCanvas.height - heightAt(0));
+  for (let x = 0; x <= snowCanvas.width; x += step) {
+    snowCtx.lineTo(x, snowCanvas.height - heightAt(x));
+  }
+  snowCtx.lineTo(snowCanvas.width, snowCanvas.height);
+  snowCtx.closePath();
+  snowCtx.fill();
+}
+
+function drawSnow() {
+  snowCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
+  drawPile();
+  snowCtx.fillStyle = 'rgba(255,255,255,0.9)';
+  for (const f of flakes) {
+    f.sway += 0.02;
+    f.y += f.speedY;
+    f.x += f.speedX + Math.sin(f.sway) * 0.3;
+    const groundY = snowCanvas.height - heightAt(f.x);
+    if (f.y > groundY) {
+      addToPile(f.x);
+      f.y = -5;
+      f.x = Math.random() * snowCanvas.width;
+    }
+    snowCtx.beginPath();
+    snowCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    snowCtx.fill();
+  }
+}
+
+function animate() {
+  skyCtx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
+  drawStars();
+  drawLightning();
+  drawClouds();
+  drawSnow();
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* ---------- GATE & KEY MANAGEMENT SYSTEM LOGIC ---------- */
+const gate = document.getElementById('gate');
+const dashboard = document.getElementById('dashboard');
+const gatePassword = document.getElementById('gatePassword');
+const gateSubmit = document.getElementById('gateSubmit');
+const gateError = document.getElementById('gateError');
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const PASSWORD_HASH = 'ca84d660411a183e3b2ac12e987634c35ff4b8a562436b109aad4601a7935a0f';
+
+function normalize(str) {
+  return str.toLowerCase().replace(/\s+/g, '');
+}
+
+// ฐานข้อมูลจำลองเก็บคีย์ใน localStorage (โหลดมาแสดงผล)
+let keysData = JSON.parse(localStorage.getItem('attackhub_keys') || '[]');
+
+function saveKeys() {
+  localStorage.setItem('attackhub_keys', JSON.stringify(keysData));
+}
+
+async function checkGate() {
+  const hash = await sha256(normalize(gatePassword.value));
+  if (hash !== PASSWORD_HASH) {
+    gateError.textContent = 'รหัสผ่านไม่ถูกต้อง';
+    return;
+  }
+  gateError.textContent = '';
+  gate.classList.add('hidden');
+  dashboard.classList.remove('hidden');
+  renderKeys();
+}
+
+function logoutDashboard() {
+  dashboard.classList.add('hidden');
+  gate.classList.remove('hidden');
+  gatePassword.value = '';
+}
+
+gateSubmit.addEventListener('click', checkGate);
+gatePassword.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') checkGate();
+});
+
+// ฟังก์ชันสร้างคีย์ (1 วัน, 5 วัน, 7 วัน, 30 วัน, ถาวร)
+function createKey() {
+  const duration = document.getElementById('keyDuration').value;
+  const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const keyName = `ATTACK-${randomStr}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+  const newKey = {
+    id: keyName,
+    duration: duration,
+    hwid: null,        // ยังไม่ถูกใช้งาน (รหัสเครื่องเป็นค่าว่าง)
+    expiresAt: null,   // จะเริ่มนับเวลาหมดอายุเมื่อถูกรันครั้งแรก
+    status: 'unused'   // สถานะ: unused (ยังไม่ใช้), used (ใช้แล้ว), expired (หมดอายุ)
+  };
+
+  keysData.unshift(newKey);
+  saveKeys();
+  renderKeys();
+}
+
+// ฟังก์ชันรีเซ็ตรหัสเครื่อง (HWID Reset)
+function resetHWID(index) {
+  if (confirm('คุณต้องการรีเซ็ตรหัสเครื่อง (HWID) ของคีย์นี้ใช่หรือไม่?')) {
+    keysData[index].hwid = null;
+    keysData[index].expiresAt = null;
+    keysData[index].status = 'unused';
+    saveKeys();
+    renderKeys();
+  }
+}
+
+// ฟังก์ชันลบคีย์
+function deleteKey(index) {
+  if (confirm('ต้องการลบคีย์นี้ออกจากระบบ?')) {
+    keysData.splice(index, 1);
+    saveKeys();
+    renderKeys();
+  }
+}
+
+// แสดงผลตารางคีย์
+function renderKeys() {
+  const tbody = document.getElementById('keyTableBody');
+  tbody.innerHTML = '';
+
+  if (keysData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">ยังไม่มีคีย์ในระบบ กดสร้างคีย์ใหม่ด้านบน</td></tr>`;
+    return;
+  }
+
+  const now = new Date().getTime();
+
+  keysData.forEach((k, index) => {
+    // เช็ควันหมดอายุแบบเรียลไทม์ถ้าถูกใช้แล้วและไม่ใช่แบบถาวร
+    if (k.status === 'used' && k.duration !== 'permanent' && k.expiresAt) {
+      if (now > k.expiresAt) {
+        k.status = 'expired';
+      }
+    }
+
+    let badgeClass = 'unused';
+    let statusText = 'ยังไม่เคยใช้';
+    if (k.status === 'used') {
+      badgeClass = 'used';
+      statusText = 'ใช้งานแล้ว';
+    } else if (k.status === 'expired') {
+      badgeClass = 'expired';
+      statusText = 'หมดอายุแล้ว';
+    }
+
+    let expText = '-';
+    if (k.duration === 'permanent') {
+      expText = 'ถาวร (Permanent)';
+    } else if (k.expiresAt) {
+      expText = k.status === 'expired' ? 'หมดอายุแล้ว' : new Date(k.expiresAt).toLocaleString('th-TH');
+    }
+
+    let hwidText = k.hwid ? `<span style="color:#58a6ff; font-family:monospace;">${k.hwid}</span>` : `<span style="color:#666;">ยังไม่มีการเชื่อมต่อ</span>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-family:monospace; font-weight:bold; color:#fff;">${k.id}</td>
+      <td>${k.duration === 'permanent' ? 'ถาวร' : k.duration + ' วัน'}</td>
+      <td><span class="badge ${badgeClass}">${statusText}</span></td>
+      <td>${hwidText}</td>
+      <td>${expText}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-action" onclick="resetHWID(${index})" title="รีเซ็ตเครื่อง">รีเซ็ต HWID</button>
+          <button class="btn-action btn-delete" onclick="deleteKey(${index})" title="ลบคีย์">ลบ</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+</script>
+
 </body>
 </html>
