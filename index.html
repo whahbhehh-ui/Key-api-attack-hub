@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Key Generator</title>
-    <!-- ดึงฟอนต์สไตล์พิกเซลแบบมายคราฟมาจาก Google Fonts -->
+    <title>Minecraft Key Generator - Packages</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         * {
@@ -22,12 +21,13 @@
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
             color: #ffffff;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
             position: relative;
+            padding: 20px 0;
         }
 
         /* เอฟเฟกต์หิมะตก */
@@ -43,32 +43,50 @@
         }
 
         @keyframes fall {
-            0% {
-                transform: translateY(-10px) translateX(0);
-            }
-            100% {
-                transform: translateY(105vh) translateX(20px);
-            }
+            0% { transform: translateY(-10px) translateX(0); }
+            100% { transform: translateY(105vh) translateX(20px); }
         }
 
-        /* กล่อง UI สไตล์มายคราฟ (เหลี่ยมๆ ตัดขอบคม) */
+        /* กล่อง UI หลักสไตล์มายคราฟ */
         .minecraft-box {
             background: #2c2c2c;
             border: 4px solid #1e1e1e;
             box-shadow: inset -4px -4px 0px #1a1a1a, inset 4px 4px 0px #4d4d4d;
-            padding: 30px;
+            padding: 25px;
             width: 90%;
-            max-width: 480px;
+            max-width: 520px;
             text-align: center;
             z-index: 10;
         }
 
         h1 {
-            font-size: 16px;
+            font-size: 14px;
             color: #55ff55;
-            text-shadow: 3px 3px #000000;
-            margin-bottom: 25px;
-            line-height: 1.5;
+            text-shadow: 2px 2px #000000;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .label-text {
+            font-size: 9px;
+            color: #aaaaaa;
+            text-align: left;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* กล่องเลือกแพ็กเกจ (Select) */
+        .minecraft-select {
+            width: 100%;
+            background: #1e1e1e;
+            border: 3px solid #000000;
+            box-shadow: inset 2px 2px 0px #0a0a0a;
+            color: #ffff55;
+            padding: 12px;
+            font-size: 10px;
+            margin-bottom: 20px;
+            outline: none;
+            cursor: pointer;
         }
 
         .key-display {
@@ -76,14 +94,15 @@
             border: 3px solid #000000;
             box-shadow: inset 2px 2px 0px #0a0a0a;
             padding: 15px;
-            font-size: 11px;
+            font-size: 10px;
             color: #ffff55;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             word-break: break-all;
-            min-height: 50px;
+            min-height: 55px;
             display: flex;
             align-items: center;
             justify-content: center;
+            line-height: 1.4;
         }
 
         /* ปุ่มกดสไตล์บล็อกมายคราฟ */
@@ -92,8 +111,8 @@
             border: 4px solid #3d3d3d;
             box-shadow: inset -4px -4px 0px #222222, inset 4px 4px 0px #a8a8a8;
             color: #ffffff;
-            padding: 15px;
-            font-size: 11px;
+            padding: 14px;
+            font-size: 10px;
             cursor: pointer;
             width: 100%;
             margin-top: 10px;
@@ -116,29 +135,38 @@
             font-size: 8px;
             margin-top: 15px;
             color: #ff5555;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
 
-    <!-- กล่องหลักสำหรับสร้างคีย์ -->
     <div class="minecraft-box">
-        <h1>MINECRAFT API KEY GENERATOR</h1>
+        <h1>MINECRAFT KEY SYSTEM</h1>
         
+        <label class="label-text">เลือกแพ็กเกจคีย์:</label>
+        <select id="packageSelect" class="minecraft-select">
+            <option value="1">แพ็กเกจ 1 วัน</option>
+            <option value="5">แพ็กเกจ 5 วัน</option>
+            <option value="7">แพ็กเกจ 7 วัน</option>
+            <option value="30">แพ็กเกจ 30 วัน</option>
+            <option value="lifetime">แพ็กเกจถาวร (Lifetime)</option>
+        </select>
+
         <div class="key-display" id="keyOutput">
-            CLICK BUTTON BELOW TO GENERATE
+            กดปุ่มด้านล่างเพื่อสร้างคีย์
         </div>
 
-        <button class="minecraft-btn" onclick="generateKey()">GENERATE KEY</button>
-        <button class="minecraft-btn" onclick="copyKey()" style="background: #3c8527;">COPY KEY</button>
+        <button class="minecraft-btn" onclick="generateKey()">สร้างคีย์ (GENERATE)</button>
+        <button class="minecraft-btn" onclick="copyKey()" style="background: #3c8527;">คัดลอกคีย์ (COPY)</button>
         
         <div class="status-msg" id="statusMsg"></div>
     </div>
 
     <script>
-        // ระบบสุ่มสร้างหิมะตก
+        // สร้างหิมะตก
         function createSnowflakes() {
-            const snowCount = 35;
+            const snowCount = 30;
             for (let i = 0; i < snowCount; i++) {
                 const snow = document.createElement('div');
                 snow.classList.add('snowflake');
@@ -147,7 +175,6 @@
                 snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
                 snow.style.animationDelay = (Math.random() * 5) + 's';
                 
-                // ขนาดเกล็ดหิมะสุ่มเล็กน้อย
                 const size = Math.random() * 4 + 3;
                 snow.style.width = size + 'px';
                 snow.style.height = size + 'px';
@@ -157,30 +184,37 @@
         }
         createSnowflakes();
 
-        // ฟังก์ชันกดสุ่ม API Key สไตล์มายคราฟ
+        // ฟังก์ชันสุ่มคีย์และกำกับประเภทวัน
         function generateKey() {
+            const selectElement = document.getElementById("packageSelect");
+            const packageVal = selectElement.value;
+            const packageText = selectElement.options[selectElement.selectedIndex].text;
+
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let key = "MC-";
+            let randomCode = "";
             for (let i = 0; i < 16; i++) {
-                if (i > 0 && i % 4 === 0) key += "-";
-                key += chars.charAt(Math.floor(Math.random() * chars.length));
+                if (i > 0 && i % 4 === 0) randomCode += "-";
+                randomCode += chars.charAt(Math.floor(Math.random() * chars.length));
             }
 
-            document.getElementById("keyOutput").innerText = key;
-            document.getElementById("statusMsg").innerText = "SUCCESS: NEW KEY CREATED!";
+            // จัดรูปแบบคีย์ให้มีป้ายกำกับระยะเวลาด้านหลัง
+            let fullKey = `MC-${randomCode} [${packageText}]`;
+
+            document.getElementById("keyOutput").innerText = fullKey;
+            document.getElementById("statusMsg").innerText = "สำเร็จ: สร้างคีย์ " + packageText + " เรียบร้อย!";
             document.getElementById("statusMsg").style.color = "#55ff55";
         }
 
-        // ฟังก์ชันคัดลอกคีย์
+        // ฟังก์ชันคัดลอก
         function copyKey() {
             const keyText = document.getElementById("keyOutput").innerText;
-            if(keyText.includes("CLICK")) {
-                document.getElementById("statusMsg").innerText = "ERROR: NO KEY TO COPY!";
+            if(keyText.includes("กดปุ่ม")) {
+                document.getElementById("statusMsg").innerText = "ข้อผิดพลาด: ยังไม่มีคีย์ให้คัดลอก!";
                 document.getElementById("statusMsg").style.color = "#ff5555";
                 return;
             }
             navigator.clipboard.writeText(keyText);
-            document.getElementById("statusMsg").innerText = "COPIED TO CLIPBOARD!";
+            document.getElementById("statusMsg").innerText = "คัดลอกคีย์ไปยังคลิปบอร์ดแล้ว!";
             document.getElementById("statusMsg").style.color = "#ffff55";
         }
     </script>
