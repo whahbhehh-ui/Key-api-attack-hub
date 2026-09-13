@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Key Generator - Packages</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>มายคราฟ ระบบสร้างและจัดการคีย์</title>
+    <!-- ดึงฟอนต์พิกเซลภาษาไทย/อังกฤษที่รองรับ -->
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Prompt:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Press Start 2P', monospace;
         }
 
         body {
@@ -18,8 +18,8 @@
             background-image: 
                 radial-gradient(#222 15%, transparent 16%),
                 radial-gradient(#1a1a1a 15%, transparent 16%);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
             color: #ffffff;
             min-height: 100vh;
             display: flex;
@@ -27,7 +27,13 @@
             align-items: center;
             overflow-x: hidden;
             position: relative;
-            padding: 20px 0;
+            padding: 30px 10px;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        /* ฟอนต์สไตล์พิกเซลสำหรับหัวข้อและปุ่ม */
+        .pixel-font {
+            font-family: 'Silkscreen', cursive, sans-serif;
         }
 
         /* เอฟเฟกต์หิมะตก */
@@ -44,38 +50,67 @@
 
         @keyframes fall {
             0% { transform: translateY(-10px) translateX(0); }
-            100% { transform: translateY(105vh) translateX(20px); }
+            100% { transform: translateY(105vh) translateX(15px); }
+        }
+
+        /* กล่องทอช (Torch) จำลองแสงไฟมายคราฟมุมซ้ายและขวา */
+        .torch {
+            position: fixed;
+            top: 20px;
+            width: 30px;
+            height: 60px;
+            background: linear-gradient(to bottom, #5c3a21, #3b2514);
+            border: 3px solid #1a1a1a;
+            z-index: 20;
+        }
+        .torch.left { left: 40px; }
+        .torch.right { right: 40px; }
+
+        .torch-fire {
+            position: absolute;
+            top: -20px;
+            left: -5px;
+            width: 32px;
+            height: 32px;
+            background: #ffa500;
+            box-shadow: 0 0 15px #ff4500, 0 0 30px #ff0000;
+            border-radius: 50% 50% 20% 20%;
+            animation: flicker 0.15s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { transform: scale(1); opacity: 0.9; background: #ffaa00; }
+            100% { transform: scale(1.1); opacity: 1; background: #ff5500; }
         }
 
         /* กล่อง UI หลักสไตล์มายคราฟ */
         .minecraft-box {
             background: #2c2c2c;
             border: 4px solid #1e1e1e;
-            box-shadow: inset -4px -4px 0px #1a1a1a, inset 4px 4px 0px #4d4d4d;
+            box-shadow: inset -4px -4px 0px #1a1a1a, inset 4px 4px 0px #4d4d4d, 0 10px 25px rgba(0,0,0,0.8);
             padding: 25px;
             width: 90%;
-            max-width: 520px;
+            max-width: 580px;
             text-align: center;
             z-index: 10;
         }
 
         h1 {
-            font-size: 14px;
+            font-size: 16px;
             color: #55ff55;
-            text-shadow: 2px 2px #000000;
+            text-shadow: 3px 3px #000000;
             margin-bottom: 20px;
-            line-height: 1.6;
         }
 
         .label-text {
-            font-size: 9px;
-            color: #aaaaaa;
+            font-size: 13px;
+            color: #dddddd;
             text-align: left;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: block;
+            font-weight: bold;
         }
 
-        /* กล่องเลือกแพ็กเกจ (Select) */
         .minecraft-select {
             width: 100%;
             background: #1e1e1e;
@@ -83,10 +118,11 @@
             box-shadow: inset 2px 2px 0px #0a0a0a;
             color: #ffff55;
             padding: 12px;
-            font-size: 10px;
-            margin-bottom: 20px;
+            font-size: 13px;
+            margin-bottom: 15px;
             outline: none;
             cursor: pointer;
+            font-family: 'Prompt', sans-serif;
         }
 
         .key-display {
@@ -94,7 +130,7 @@
             border: 3px solid #000000;
             box-shadow: inset 2px 2px 0px #0a0a0a;
             padding: 15px;
-            font-size: 10px;
+            font-size: 12px;
             color: #ffff55;
             margin-bottom: 15px;
             word-break: break-all;
@@ -102,22 +138,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            line-height: 1.4;
+            text-align: center;
         }
 
-        /* ปุ่มกดสไตล์บล็อกมายคราฟ */
         .minecraft-btn {
             background: #727272;
             border: 4px solid #3d3d3d;
             box-shadow: inset -4px -4px 0px #222222, inset 4px 4px 0px #a8a8a8;
             color: #ffffff;
-            padding: 14px;
-            font-size: 10px;
+            padding: 12px;
+            font-size: 12px;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8px;
             text-shadow: 2px 2px #000000;
-            transition: 0.1s;
+            transition: 0.05s;
         }
 
         .minecraft-btn:hover {
@@ -132,19 +167,79 @@
         }
 
         .status-msg {
-            font-size: 8px;
-            margin-top: 15px;
+            font-size: 11px;
+            margin-top: 12px;
             color: #ff5555;
-            line-height: 1.4;
+            min-height: 20px;
         }
+
+        /* ส่วนแสดงประวัติคีย์ที่เคยสร้าง */
+        .history-section {
+            margin-top: 25px;
+            border-top: 3px dashed #444;
+            padding-top: 15px;
+            text-align: left;
+        }
+
+        .history-title {
+            font-size: 12px;
+            color: #ffaa00;
+            margin-bottom: 10px;
+        }
+
+        .history-list {
+            max-height: 180px;
+            overflow-y: auto;
+            background: #18181c;
+            border: 2px solid #000;
+            padding: 8px;
+        }
+
+        .history-item {
+            background: #25252b;
+            border: 1px solid #3d3d3d;
+            padding: 8px;
+            margin-bottom: 6px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .history-item span {
+            color: #aaa;
+            font-size: 10px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 4px;
+        }
+
+        .small-btn {
+            background: #555;
+            border: 2px solid #222;
+            color: #fff;
+            font-size: 9px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        .small-btn.reset { background: #b85b14; }
+        .small-btn.delete { background: #b82b2b; }
+        .small-btn:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
 
+    <!-- ทอชปักซ้ายขวา -->
+    <div class="torch left"><div class="torch-fire"></div></div>
+    <div class="torch right"><div class="torch-fire"></div></div>
+
     <div class="minecraft-box">
-        <h1>MINECRAFT KEY SYSTEM</h1>
+        <h1 class="pixel-font">MINECRAFT KEY SYSTEM</h1>
         
-        <label class="label-text">เลือกแพ็กเกจคีย์:</label>
+        <label class="label-text">เลือกแพ็กเกจระยะเวลา:</label>
         <select id="packageSelect" class="minecraft-select">
             <option value="1">แพ็กเกจ 1 วัน</option>
             <option value="5">แพ็กเกจ 5 วัน</option>
@@ -154,19 +249,27 @@
         </select>
 
         <div class="key-display" id="keyOutput">
-            กดปุ่มด้านล่างเพื่อสร้างคีย์
+            กดปุ่มสร้างคีย์ด้านล่างเพื่อเริ่มใช้งาน
         </div>
 
-        <button class="minecraft-btn" onclick="generateKey()">สร้างคีย์ (GENERATE)</button>
-        <button class="minecraft-btn" onclick="copyKey()" style="background: #3c8527;">คัดลอกคีย์ (COPY)</button>
+        <button class="minecraft-btn pixel-font" onclick="generateKey()">สร้างคีย์ใหม่ (GENERATE)</button>
+        <button class="minecraft-btn pixel-font" onclick="copyKey()" style="background: #3c8527;">คัดลอกคีย์ล่าสุด (COPY)</button>
         
         <div class="status-msg" id="statusMsg"></div>
+
+        <!-- รายการประวัติคีย์ที่สร้างไว้ -->
+        <div class="history-section">
+            <div class="history-title pixel-font">📜 ประวัติคีย์ที่คุณเคยสร้างในเครื่องนี้:</div>
+            <div class="history-list" id="historyList">
+                <!-- ข้อมูลจะแสดงตรงนี้ผ่าน JavaScript -->
+            </div>
+        </div>
     </div>
 
     <script>
         // สร้างหิมะตก
         function createSnowflakes() {
-            const snowCount = 30;
+            const snowCount = 25;
             for (let i = 0; i < snowCount; i++) {
                 const snow = document.createElement('div');
                 snow.classList.add('snowflake');
@@ -174,20 +277,23 @@
                 snow.style.top = (Math.random() * -50) + 'px';
                 snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
                 snow.style.animationDelay = (Math.random() * 5) + 's';
-                
-                const size = Math.random() * 4 + 3;
-                snow.style.width = size + 'px';
-                snow.style.height = size + 'px';
-                
                 document.body.appendChild(snow);
             }
         }
         createSnowflakes();
 
-        // ฟังก์ชันสุ่มคีย์และกำกับประเภทวัน
+        // โหลดประวัติจาก localStorage
+        let keyHistory = JSON.parse(localStorage.getItem('mc_key_history')) || [];
+
+        function saveHistory() {
+            localStorage.setItem('mc_key_history', JSON.stringify(keyHistory));
+            renderHistory();
+        }
+
+        // ฟังก์ชันสร้างคีย์
         function generateKey() {
             const selectElement = document.getElementById("packageSelect");
-            const packageVal = selectElement.value;
+            const packageDays = selectElement.value;
             const packageText = selectElement.options[selectElement.selectedIndex].text;
 
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -197,26 +303,104 @@
                 randomCode += chars.charAt(Math.floor(Math.random() * chars.length));
             }
 
-            // จัดรูปแบบคีย์ให้มีป้ายกำกับระยะเวลาด้านหลัง
-            let fullKey = `MC-${randomCode} [${packageText}]`;
+            const fullKey = `MC-${randomCode}`;
+            
+            // คำนวณวันหมดอายุ
+            let expireDate = "ใช้งานได้ตลอดชีพ";
+            let now = new Date().getTime();
+            if (packageDays !== "lifetime") {
+                let days = parseInt(packageDays);
+                let expTime = now + (days * 24 * 60 * 60 * 1000);
+                expireDate = new Date(expTime).toLocaleString();
+            }
 
-            document.getElementById("keyOutput").innerText = fullKey;
-            document.getElementById("statusMsg").innerText = "สำเร็จ: สร้างคีย์ " + packageText + " เรียบร้อย!";
+            // บันทึกลงระบบจำคีย์ (จำลอง HWID ล็อกเครื่องแรกที่กดใช้)
+            const newKeyData = {
+                key: fullKey,
+                package: packageText,
+                expire: expireDate,
+                expireTimestamp: packageDays === "lifetime" ? null : now + (parseInt(packageDays) * 86400000),
+                hwid: "HWID-USER-" + Math.floor(Math.random() * 89999 + 10000), // ล็อกรหัสเครื่องจำลอง
+                status: "ปกติ (ยังไม่ถูกใช้งาน)"
+            };
+
+            keyHistory.unshift(newKeyData); // เพิ่มไว้บนสุด
+            saveHistory();
+
+            document.getElementById("keyOutput").innerText = `${fullKey} [${packageText}]`;
+            document.getElementById("statusMsg").innerText = "สำเร็จ! สร้างคีย์และบันทึกข้อมูลเรียบร้อย";
             document.getElementById("statusMsg").style.color = "#55ff55";
         }
 
-        // ฟังก์ชันคัดลอก
+        // แสดงประวัติคีย์ทั้งหมด
+        function renderHistory() {
+            const listEl = document.getElementById("historyList");
+            listEl.innerHTML = "";
+
+            if (keyHistory.length === 0) {
+                listEl.innerHTML = "<div style='color:#777; font-size:10px; text-align:center; padding:10px;'>ยังไม่มีประวัติการสร้างคีย์</div>";
+                return;
+            }
+
+            let currentTime = new Date().getTime();
+
+            keyHistory.forEach((item, index) => {
+                // เช็ควันหมดอายุ
+                let statusText = item.status;
+                let statusColor = "#55ff55";
+
+                if (item.expireTimestamp && currentTime > item.expireTimestamp) {
+                    statusText = "❌ หมดอายุแล้ว (Expired)";
+                    statusColor = "#ff5555";
+                }
+
+                const div = document.createElement("div");
+                div.classList.add("history-item");
+                div.innerHTML = `
+                    <b style="color: #ffff55;">${item.key}</b>
+                    <span>แพ็กเกจ: ${item.package} | หมดอายุ: ${item.expire}</span>
+                    <span>รหัสเครื่อง (HWID): <b style="color:#00ffff;">${item.hwid}</b></span>
+                    <span style="color: ${statusColor}; font-weight:bold;">สถานะ: ${statusText}</span>
+                    <div class="history-actions">
+                        <button class="small-btn reset" onclick="resetHwid(${index})">รีเซ็ตรหัสเครื่อง</button>
+                        <button class="small-btn delete" onclick="deleteKey(${index})">ลบคีย์</button>
+                    </div>
+                `;
+                listEl.appendChild(div);
+            });
+        }
+
+        // รีเซ็ตรหัสเครื่อง (HWID)
+        function resetHwid(index) {
+            keyHistory[index].hwid = "ยังไม่มีการผูกรหัสเครื่อง (รีเซ็ตแล้ว)";
+            keyHistory[index].status = "ปกติ (รีเซ็ต HWID แล้ว)";
+            saveHistory();
+            alert("รีเซ็ตรหัสเครื่อง (HWID) ของคีย์นี้สำเร็จแล้ว!");
+        }
+
+        // ลบคีย์
+        function deleteKey(index) {
+            if(confirm("ต้องการลบคีย์นี้ออกจากประวัติใช่หรือไม่?")) {
+                keyHistory.splice(index, 1);
+                saveHistory();
+            }
+        }
+
+        // ฟังก์ชันคัดลอกคีย์ล่าสุด
         function copyKey() {
-            const keyText = document.getElementById("keyOutput").innerText;
-            if(keyText.includes("กดปุ่ม")) {
-                document.getElementById("statusMsg").innerText = "ข้อผิดพลาด: ยังไม่มีคีย์ให้คัดลอก!";
+            if (keyHistory.length === 0) {
+                document.getElementById("statusMsg").innerText = "ผิดพลาด: ยังไม่มีคีย์ให้คัดลอก!";
                 document.getElementById("statusMsg").style.color = "#ff5555";
                 return;
             }
-            navigator.clipboard.writeText(keyText);
-            document.getElementById("statusMsg").innerText = "คัดลอกคีย์ไปยังคลิปบอร์ดแล้ว!";
+            const latestKey = `${keyHistory[0].key} [${keyHistory[0].package}]`;
+            navigator.clipboard.writeText(latestKey);
+            document.getElementById("statusMsg").innerText = "คัดลอกคีย์ล่าสุดเรียบร้อย!";
             document.getElementById("statusMsg").style.color = "#ffff55";
         }
+
+        // โหลดข้อมูลประวัติครั้งแรกตอนเปิดเว็บ
+        renderHistory();
     </script>
 </body>
 </html>
